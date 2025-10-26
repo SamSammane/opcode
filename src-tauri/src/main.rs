@@ -60,7 +60,10 @@ fn main() {
         .plugin(tauri_plugin_shell::init())
         .setup(|app| {
             // Initialize agents database
-            let conn = init_database(&app.handle()).expect("Failed to initialize agents database");
+            let conn = init_database(&app.handle()).map_err(|e| {
+                log::error!("Failed to initialize agents database: {}", e);
+                Box::new(e) as Box<dyn std::error::Error>
+            })?;
 
             // Load and apply proxy settings from the database
             {
@@ -117,7 +120,10 @@ fn main() {
             }
 
             // Re-open the connection for the app to manage
-            let conn = init_database(&app.handle()).expect("Failed to initialize agents database");
+            let conn = init_database(&app.handle()).map_err(|e| {
+                log::error!("Failed to re-initialize agents database: {}", e);
+                Box::new(e) as Box<dyn std::error::Error>
+            })?;
             app.manage(AgentDb(Mutex::new(conn)));
 
             // Initialize checkpoint state
@@ -171,13 +177,15 @@ fn main() {
 
                 if !applied {
                     // Fallback without rounded corners
-                    apply_vibrancy(
+                    if let Err(e) = apply_vibrancy(
                         &window,
                         NSVisualEffectMaterial::WindowBackground,
                         None,
                         None,
-                    )
-                    .expect("Failed to apply any window vibrancy");
+                    ) {
+                        log::warn!("Failed to apply window vibrancy: {}", e);
+                        // Continue without vibrancy - this is a cosmetic feature
+                    }
                 }
             }
 

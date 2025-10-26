@@ -46,6 +46,37 @@ pub struct QueryResult {
     pub last_insert_rowid: Option<i64>,
 }
 
+/// Security: Keywords that are forbidden in user SQL queries
+const FORBIDDEN_SQL_KEYWORDS: &[&str] = &[
+    "DROP", "DELETE", "UPDATE", "INSERT", "ALTER",
+    "CREATE", "EXEC", "EXECUTE", "PRAGMA", "ATTACH",
+    "DETACH", "REPLACE", "TRUNCATE", "GRANT", "REVOKE",
+];
+
+/// Validate that a SQL query is read-only (SELECT only)
+fn validate_read_only_query(query: &str) -> Result<(), String> {
+    let trimmed = query.trim().to_uppercase();
+
+    // Must start with SELECT
+    if !trimmed.starts_with("SELECT") {
+        return Err("Only SELECT queries are allowed".to_string());
+    }
+
+    // Check for forbidden keywords that could modify data
+    for keyword in FORBIDDEN_SQL_KEYWORDS {
+        if trimmed.contains(keyword) {
+            return Err(format!("Query contains forbidden keyword: {}", keyword));
+        }
+    }
+
+    // Limit query length to prevent DoS
+    if query.len() > 10_000 {
+        return Err("Query too long (max 10,000 characters)".to_string());
+    }
+
+    Ok(())
+}
+
 /// List all tables in the database
 #[tauri::command]
 pub async fn storage_list_tables(db: State<'_, AgentDb>) -> Result<Vec<TableInfo>, String> {
@@ -376,12 +407,15 @@ pub async fn storage_insert_row(
     Ok(conn.last_insert_rowid())
 }
 
-/// Execute a raw SQL query
+/// Execute a raw SQL query (READ-ONLY for security)
 #[tauri::command]
 pub async fn storage_execute_sql(
     db: State<'_, AgentDb>,
     query: String,
 ) -> Result<QueryResult, String> {
+    // SECURITY: Validate query to prevent SQL injection and data manipulation
+    validate_read_only_query(&query)?;
+
     let conn = db.0.lock().map_err(|e| e.to_string())?;
 
     // Check if it's a SELECT query
