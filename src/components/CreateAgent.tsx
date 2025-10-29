@@ -104,12 +104,14 @@ export const CreateAgent: React.FC<CreateAgentProps> = ({
   };
 
   const handleBack = () => {
-    if ((name !== (agent?.name || "") || 
-         selectedIcon !== (agent?.icon || "bot") || 
-         systemPrompt !== (agent?.system_prompt || "") ||
-         defaultTask !== (agent?.default_task || "") ||
-         model !== (agent?.model || "sonnet")) && 
-        !confirm("You have unsaved changes. Are you sure you want to leave?")) {
+    const hasChanges =
+      name !== (agent?.name || "") ||
+      selectedIcon !== (agent?.icon || "bot") ||
+      systemPrompt !== (agent?.system_prompt || "") ||
+      defaultTask !== (agent?.default_task || "") ||
+      model !== (agent?.model || "sonnet");
+
+    if (hasChanges && !confirm("You have unsaved changes. Are you sure you want to leave?")) {
       return;
     }
     onBack();
@@ -238,16 +240,40 @@ export const CreateAgent: React.FC<CreateAgentProps> = ({
               {/* Model Selection */}
               <div className="space-y-2 mt-4">
                 <Label className="text-caption text-muted-foreground">Model</Label>
-                <div className="flex flex-col sm:flex-row gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <motion.button
+                    type="button"
+                    onClick={() => setModel("haiku")}
+                    whileTap={{ scale: 0.97 }}
+                    transition={{ duration: 0.15 }}
+                    className={cn(
+                      "px-4 py-3 rounded-md border transition-all",
+                      model === "haiku"
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-border hover:border-primary/50 hover:bg-accent"
+                    )}
+                  >
+                    <div className="flex items-center gap-3">
+                      <Zap className={cn(
+                        "h-4 w-4",
+                        model === "haiku" ? "text-primary" : "text-muted-foreground"
+                      )} />
+                      <div className="text-left">
+                        <div className="text-body-small font-medium">Claude 3.5 Haiku</div>
+                        <div className="text-caption text-muted-foreground">Fastest, ideal for quick tasks</div>
+                      </div>
+                    </div>
+                  </motion.button>
+
                   <motion.button
                     type="button"
                     onClick={() => setModel("sonnet")}
                     whileTap={{ scale: 0.97 }}
                     transition={{ duration: 0.15 }}
                     className={cn(
-                      "flex-1 px-4 py-3 rounded-md border transition-all",
-                      model === "sonnet" 
-                        ? "border-primary bg-primary/10 text-primary" 
+                      "px-4 py-3 rounded-md border transition-all",
+                      model === "sonnet"
+                        ? "border-primary bg-primary/10 text-primary"
                         : "border-border hover:border-primary/50 hover:bg-accent"
                     )}
                   >
@@ -257,21 +283,45 @@ export const CreateAgent: React.FC<CreateAgentProps> = ({
                         model === "sonnet" ? "text-primary" : "text-muted-foreground"
                       )} />
                       <div className="text-left">
-                        <div className="text-body-small font-medium">Claude 4 Sonnet</div>
-                        <div className="text-caption text-muted-foreground">Faster, efficient for most tasks</div>
+                        <div className="text-body-small font-medium">Claude 3.5 Sonnet</div>
+                        <div className="text-caption text-muted-foreground">Balanced speed and capability</div>
                       </div>
                     </div>
                   </motion.button>
-                  
+
+                  <motion.button
+                    type="button"
+                    onClick={() => setModel("sonnet-4")}
+                    whileTap={{ scale: 0.97 }}
+                    transition={{ duration: 0.15 }}
+                    className={cn(
+                      "px-4 py-3 rounded-md border transition-all",
+                      model === "sonnet-4"
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-border hover:border-primary/50 hover:bg-accent"
+                    )}
+                  >
+                    <div className="flex items-center gap-3">
+                      <Zap className={cn(
+                        "h-4 w-4",
+                        model === "sonnet-4" ? "text-primary" : "text-muted-foreground"
+                      )} />
+                      <div className="text-left">
+                        <div className="text-body-small font-medium">Claude 4 Sonnet</div>
+                        <div className="text-caption text-muted-foreground">Latest Sonnet, enhanced performance</div>
+                      </div>
+                    </div>
+                  </motion.button>
+
                   <motion.button
                     type="button"
                     onClick={() => setModel("opus")}
                     whileTap={{ scale: 0.97 }}
                     transition={{ duration: 0.15 }}
                     className={cn(
-                      "flex-1 px-4 py-3 rounded-md border transition-all",
-                      model === "opus" 
-                        ? "border-primary bg-primary/10 text-primary" 
+                      "px-4 py-3 rounded-md border transition-all",
+                      model === "opus"
+                        ? "border-primary bg-primary/10 text-primary"
                         : "border-border hover:border-primary/50 hover:bg-accent"
                     )}
                   >
@@ -282,7 +332,7 @@ export const CreateAgent: React.FC<CreateAgentProps> = ({
                       )} />
                       <div className="text-left">
                         <div className="text-body-small font-medium">Claude 4 Opus</div>
-                        <div className="text-caption text-muted-foreground">More capable, better for complex tasks</div>
+                        <div className="text-caption text-muted-foreground">Most capable, best for complex tasks</div>
                       </div>
                     </div>
                   </motion.button>

@@ -25,7 +25,7 @@ import {
 } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { api, type Agent } from "@/lib/api";
-import { cn } from "@/lib/utils";
+import { cn, getModelDisplayName } from "@/lib/utils";
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 import { StreamMessage } from "./StreamMessage";
 import { ExecutionControlBar } from "./ExecutionControlBar";
@@ -469,7 +469,7 @@ export const AgentExecution: React.FC<AgentExecutionProps> = ({
   const handleCopyAsMarkdown = async () => {
     let markdown = `# Agent Execution: ${agent.name}\n\n`;
     markdown += `**Task:** ${task}\n`;
-    markdown += `**Model:** ${model === 'opus' ? 'Claude 4 Opus' : 'Claude 4 Sonnet'}\n`;
+    markdown += `**Model:** ${getModelDisplayName(model)}\n`;
     markdown += `**Date:** ${new Date().toISOString()}\n\n`;
     markdown += `---\n\n`;
 
@@ -553,7 +553,7 @@ export const AgentExecution: React.FC<AgentExecutionProps> = ({
               <div>
                 <h1 className="text-heading-1">{agent.name}</h1>
                 <p className="mt-1 text-body-small text-muted-foreground">
-                  {isRunning ? 'Running' : messages.length > 0 ? 'Complete' : 'Ready'} • {model === 'opus' ? 'Claude 4 Opus' : 'Claude 4 Sonnet'}
+                  {isRunning ? 'Running' : messages.length > 0 ? 'Complete' : 'Ready'} • {getModelDisplayName(model)}
                 </p>
               </div>
             </div>
@@ -592,16 +592,46 @@ export const AgentExecution: React.FC<AgentExecutionProps> = ({
             {/* Model Selection */}
             <div className="space-y-3">
               <Label className="text-caption text-muted-foreground">Model Selection</Label>
-              <div className="flex gap-2">
+              <div className="grid grid-cols-2 gap-2">
+                <motion.button
+                  type="button"
+                  onClick={() => !isRunning && setModel("haiku")}
+                  whileTap={{ scale: 0.97 }}
+                  transition={{ duration: 0.15 }}
+                  className={cn(
+                    "px-4 py-3 rounded-md border transition-all",
+                    model === "haiku"
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-border hover:border-primary/50 hover:bg-accent",
+                    isRunning && "opacity-50 cursor-not-allowed"
+                  )}
+                  disabled={isRunning}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={cn(
+                      "w-4 h-4 rounded-full border-2 flex items-center justify-center",
+                      model === "haiku" ? "border-primary" : "border-muted-foreground"
+                    )}>
+                      {model === "haiku" && (
+                        <div className="w-2 h-2 rounded-full bg-primary" />
+                      )}
+                    </div>
+                    <div className="text-left">
+                      <div className="text-body-small font-medium">Claude 3.5 Haiku</div>
+                      <div className="text-caption text-muted-foreground">Fastest</div>
+                    </div>
+                  </div>
+                </motion.button>
+
                 <motion.button
                   type="button"
                   onClick={() => !isRunning && setModel("sonnet")}
                   whileTap={{ scale: 0.97 }}
                   transition={{ duration: 0.15 }}
                   className={cn(
-                    "flex-1 px-4 py-3 rounded-md border transition-all",
-                    model === "sonnet" 
-                      ? "border-primary bg-primary/10 text-primary" 
+                    "px-4 py-3 rounded-md border transition-all",
+                    model === "sonnet"
+                      ? "border-primary bg-primary/10 text-primary"
                       : "border-border hover:border-primary/50 hover:bg-accent",
                     isRunning && "opacity-50 cursor-not-allowed"
                   )}
@@ -617,21 +647,51 @@ export const AgentExecution: React.FC<AgentExecutionProps> = ({
                       )}
                     </div>
                     <div className="text-left">
-                      <div className="text-body-small font-medium">Claude 4 Sonnet</div>
-                      <div className="text-caption text-muted-foreground">Faster, efficient</div>
+                      <div className="text-body-small font-medium">Claude 3.5 Sonnet</div>
+                      <div className="text-caption text-muted-foreground">Balanced</div>
                     </div>
                   </div>
                 </motion.button>
-                
+
+                <motion.button
+                  type="button"
+                  onClick={() => !isRunning && setModel("sonnet-4")}
+                  whileTap={{ scale: 0.97 }}
+                  transition={{ duration: 0.15 }}
+                  className={cn(
+                    "px-4 py-3 rounded-md border transition-all",
+                    model === "sonnet-4"
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-border hover:border-primary/50 hover:bg-accent",
+                    isRunning && "opacity-50 cursor-not-allowed"
+                  )}
+                  disabled={isRunning}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={cn(
+                      "w-4 h-4 rounded-full border-2 flex items-center justify-center",
+                      model === "sonnet-4" ? "border-primary" : "border-muted-foreground"
+                    )}>
+                      {model === "sonnet-4" && (
+                        <div className="w-2 h-2 rounded-full bg-primary" />
+                      )}
+                    </div>
+                    <div className="text-left">
+                      <div className="text-body-small font-medium">Claude 4 Sonnet</div>
+                      <div className="text-caption text-muted-foreground">Enhanced</div>
+                    </div>
+                  </div>
+                </motion.button>
+
                 <motion.button
                   type="button"
                   onClick={() => !isRunning && setModel("opus")}
                   whileTap={{ scale: 0.97 }}
                   transition={{ duration: 0.15 }}
                   className={cn(
-                    "flex-1 px-4 py-3 rounded-md border transition-all",
-                    model === "opus" 
-                      ? "border-primary bg-primary/10 text-primary" 
+                    "px-4 py-3 rounded-md border transition-all",
+                    model === "opus"
+                      ? "border-primary bg-primary/10 text-primary"
                       : "border-border hover:border-primary/50 hover:bg-accent",
                     isRunning && "opacity-50 cursor-not-allowed"
                   )}
@@ -648,7 +708,7 @@ export const AgentExecution: React.FC<AgentExecutionProps> = ({
                     </div>
                     <div className="text-left">
                       <div className="text-body-small font-medium">Claude 4 Opus</div>
-                      <div className="text-caption text-muted-foreground">More capable</div>
+                      <div className="text-caption text-muted-foreground">Most capable</div>
                     </div>
                   </div>
                 </motion.button>
